@@ -32,11 +32,7 @@
                 <x-text-input id="password" class="block w-full pr-10" type="password" name="password" required
                     autocomplete="current-password" placeholder="••••••••" />
 
-                <button type="button" id="togglePwd"
-                    class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
-                    aria-label="Toggle password visibility">
-
-                </button>
+                
             </div>
 
             <x-input-error :messages="$errors->get('password')" class="mt-2" />

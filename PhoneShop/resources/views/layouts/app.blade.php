@@ -1,197 +1,275 @@
+{{-- resources/views/layouts/app.blade.php --}}
 <!doctype html>
 <html lang="vi">
-
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>@yield('title', 'PhoneShop')</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>@yield('title','PhoneShop')</title>
 
-    {{-- Build assets --}}
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+  {{-- KHÔNG DÙNG VITE --}}
+  <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
 
-    {{-- Bootstrap + Font Awesome --}}
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        crossorigin="anonymous" />
+  {{-- Bootstrap + Icons --}}
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.bunny.net">
+  <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-    @stack('styles')
+  {{-- ===== Styles: Navbar + Theme Slate + Search inline ===== --}}
+  <style>
+    :root{ --nav-h: 72px; }
+
+    /* Nếu TRANG KHÔNG có hero overlap, tránh navbar che nội dung */
+    body { padding-top: var(--nav-h); }
+
+    /* Navbar overlay trên hero video */
+    .navbar.nav-overlay{
+      background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
+      z-index: 1050;
+    }
+    .navbar.nav-overlay .navbar-brand,
+    .navbar.nav-overlay .nav-link,
+    .navbar.nav-overlay .dropdown-item,
+    .navbar.nav-overlay .bi{ color:#fff !important; }
+    .navbar.nav-overlay .nav-link:hover{ color:#f1f1f1 !important; }
+    .navbar.nav-overlay .navbar-toggler{ border-color: rgba(255,255,255,.6); }
+    .navbar.nav-overlay .navbar-toggler-icon{ filter: invert(1) grayscale(1); }
+
+    /* Khi cuộn: nền đặc để tương phản tốt */
+    .navbar.scrolled{
+      background:#0b1320 !important;
+      box-shadow:0 .25rem 1rem rgba(0,0,0,.15);
+    }
+
+    /* ======= Theme Slate (dark nhẹ) ======= */
+    body.theme-slate{
+      background:#0b1320;
+      color:rgba(255,255,255,.88);
+    }
+    .theme-slate a{ color:#86b7ff; }
+    .theme-slate a:hover{ color:#b6d0ff; }
+    .theme-slate h1,.theme-slate h2,.theme-slate h3,
+    .theme-slate h4,.theme-slate h5,.theme-slate h6{ color:#fff; }
+    .theme-slate .text-muted{ color:rgba(255,255,255,.6)!important; }
+
+    /* Card & input sáng để nội dung dễ đọc */
+    .theme-slate .card{ background:#fff; color:#1f2937; border-color:#e9ecef; }
+    .theme-slate .card .text-muted{ color:#6c757d!important; }
+    .theme-slate .form-control,
+    .theme-slate .input-group-text,
+    .theme-slate .form-select{ background:#fff; color:#212529; border-color:#dee2e6; }
+
+    /* Pagination hợp tông */
+    .theme-slate .pagination .page-link{ background:#0f172a; color:#cfe2ff; border-color:#24364d; }
+    .theme-slate .pagination .page-link:hover{ background:#16243a; color:#fff; border-color:#2b4160; }
+    .theme-slate .pagination .page-item.active .page-link{ background:#0d6efd; border-color:#0d6efd; color:#fff; }
+    .theme-slate .pagination .page-item.disabled .page-link{ background:#0e1524; color:#70809a; border-color:#24364d; }
+
+    /* Offcanvas tối (đồng bộ) */
+    .theme-slate .offcanvas{ background:#0f172a; color:#e6edf5; }
+    .theme-slate .offcanvas .dropdown-item{ color:#cfe2ff; }
+    .theme-slate .offcanvas .dropdown-item:hover{ background:#16243a; color:#fff; }
+
+    /* ===== Search inline trong navbar ===== */
+    .nav-searchwrap{ position:relative; }
+    .nav-searchbox{
+      width:0;
+      opacity:0;
+      pointer-events:none;
+      overflow:hidden;
+      transition: width .25s ease, opacity .2s ease;
+      background:transparent;
+    }
+    .nav-searchbox.show{
+      width:340px;              /* độ rộng khi mở */
+      opacity:1;
+      pointer-events:auto;
+    }
+    .nav-searchbox .input-group-text,
+    .nav-searchbox .form-control{ border-radius:.75rem; }
+    .nav-searchbox .input-group-text{ background:#fff; border:0; }
+    .nav-searchbox .form-control{ background:#fff; border:0; }
+    @media (max-width:576px){
+      .nav-searchbox.show{ width:220px; }
+    }
+  </style>
+
+  @stack('styles')
 </head>
+<body class="theme-slate">
 
-<body class="bg-light">
+  {{-- NAVBAR ICON (hamburger - logo - search - user - bag) --}}
+  <nav class="navbar navbar-expand-lg navbar-dark nav-overlay fixed-top w-100">
+    <div class="container-fluid align-items-center px-3">
+      {{-- Left: Hamburger --}}
+      <button class="btn btn-icon me-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMain"
+              aria-controls="offcanvasMain" aria-label="Menu">
+        <i class="bi bi-list"></i>
+      </button>
 
-    {{-- NAVBAR --}}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-        <div class="container">
+      {{-- Center: Logo (nên dùng logo trắng) --}}
+      <a class="navbar-brand m-0 p-0 mx-auto" href="{{ route('home') }}" aria-label="Home">
+        <img src="{{ asset('images/logo-mark-white.svg') }}" alt="PhoneShop" height="28">
+      </a>
 
-            {{-- Brand --}}
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="{{ route('home') }}">
-                <i class="fa-solid fa-mobile-screen-button me-2"></i>
-                PhoneShop
-            </a>
+      {{-- Right: Search inline + User + Bag --}}
+      <div class="d-flex ms-auto align-items-center gap-2">
+        {{-- Search inline kế bên nút --}}
+        <button id="btnSearch" class="btn btn-icon" type="button" aria-label="Tìm kiếm">
+          <i class="bi bi-search"></i>
+        </button>
 
-            {{-- Toggler (mobile) --}}
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain"
-                aria-controls="navMain" aria-expanded="false" aria-label="Mở điều hướng">
-                <span class="navbar-toggler-icon"></span>
+        <div class="nav-searchwrap ms-2">
+          <form method="get" action="{{ route('home') }}" class="nav-searchbox" id="navSearchBox">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input id="navSearchInput" type="text" name="q" class="form-control"
+                     placeholder="Tìm điện thoại..." value="{{ request('q') }}">
+            </div>
+          </form>
+        </div>
+
+        {{-- User --}}
+        @auth
+          <div class="dropdown">
+            <button class="btn btn-icon" data-bs-toggle="dropdown" aria-label="Tài khoản">
+              <i class="bi bi-person"></i>
             </button>
-
-            {{-- Collapsible content --}}
-            <div class="collapse navbar-collapse" id="navMain">
-
-                {{-- Search (đặt trái trên desktop, full-width trên mobile) --}}
-                <form class="d-flex ms-lg-auto my-3 my-lg-0 w-75 w-lg-auto" method="get" action="{{ route('home') }}">
-                    <div class="input-group">
-                        <span class="input-group-text bg-dark text-white border-secondary d-none d-sm-inline-flex">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                        </span>
-                        <input class="form-control border-secondary" name="q" value="{{ request('q') }}"
-                            placeholder="Tìm điện thoại...">
-                        <button class="btn btn-primary">
-                            Tìm
-                        </button>
-                    </div>
+            <ul class="dropdown-menu dropdown-menu-end shadow">
+              @if (auth()->user()->role === 'admin')
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Quản trị</a></li>
+                <li><hr class="dropdown-divider"></li>
+              @endif
+              <li><a class="dropdown-item" href="{{ route('orders.mine') }}"><i class="bi bi-receipt me-2"></i>Đơn hàng của tôi</a></li>
+              <li><a class="dropdown-item" href="{{ route('checkout.create') }}"><i class="bi bi-credit-card me-2"></i>Thanh toán</a></li>
+              <li>
+                <form method="POST" action="{{ route('logout') }}">
+                  @csrf
+                  <button class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Đăng xuất</button>
                 </form>
+              </li>
+            </ul>
+          </div>
+        @else
+          <a href="{{ route('login') }}" class="btn btn-icon" aria-label="Đăng nhập">
+            <i class="bi bi-person"></i>
+          </a>
+        @endauth
 
-                {{-- Menu phải --}}
-                <ul class="navbar-nav ms-lg-3 align-items-lg-center">
-                    @auth
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('orders.mine') }}">
-                                <i class="fa-solid fa-receipt me-1"></i>Đơn
-                            </a>
-                        </li>
+        {{-- Cart --}}
+        @php $cartCount = session('cart_count', 0); @endphp
+        <a href="{{ route('cart.index') }}" class="btn btn-icon position-relative" aria-label="Giỏ hàng">
+          <i class="bi bi-bag"></i>
+          @if(($cartCount ?? 0) > 0)
+            <span class="badge rounded-pill bg-teal position-absolute top-0 start-100 translate-middle p-1 px-2">{{ $cartCount }}</span>
+          @endif
+        </a>
+      </div>
+    </div>
+  </nav>
 
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('cart.index') }}">
-                                <i class="fa-solid fa-cart-shopping me-1"></i>Giỏ
-                            </a>
-                        </li>
+  {{-- OFFCANVAS TRÁI --}}
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMain" aria-labelledby="offcanvasMainLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasMainLabel">Danh mục</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Đóng"></button>
+    </div>
+    <div class="offcanvas-body">
+      <ul class="list-unstyled">
+        <li><a class="dropdown-item py-2" href="{{ route('home') }}">Trang chủ</a></li>
+        <li><a class="dropdown-item py-2" href="{{ route('home') }}">Sản phẩm</a></li>
+        <li><a class="dropdown-item py-2" href="{{ route('cart.index') }}">Giỏ hàng</a></li>
+        @auth
+          <li><a class="dropdown-item py-2" href="{{ route('orders.mine') }}">Đơn hàng của tôi</a></li>
+          <li><a class="dropdown-item py-2" href="{{ route('checkout.create') }}">Thanh toán</a></li>
+          @if (auth()->user()->role === 'admin')
+            <li><hr></li>
+            <li><a class="dropdown-item py-2" href="{{ route('admin.dashboard') }}">Trang quản trị</a></li>
+          @endif
+        @endauth
+      </ul>
+    </div>
+  </div>
 
-                        {{-- User dropdown --}}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#"
-                                data-bs-toggle="dropdown">
-                                <i class="fa-solid fa-user me-1"></i>
-                                <span class="text-truncate" style="max-width: 160px;">
-                                    {{ auth()->user()->name }}
-                                </span>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                @if (auth()->user()->role === 'admin')
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('admin.dashboard') }}">
-                                            <i class="fa-solid fa-gauge me-2 text-primary"></i>Trang quản trị
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <hr class="dropdown-divider">
-                                    </li>
-                                @endif
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="px-2 py-1">
-                                        @csrf
-                                        <button class="btn btn-danger w-100">
-                                            <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </li>
-                    @else
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('cart.index') }}">
-                                <i class="fa-solid fa-cart-shopping me-1"></i>Giỏ
-                            </a>
-                        </li>
-                        <li class="nav-item mt-2 mt-lg-0">
-                            <a class="btn btn-primary" href="{{ route('login') }}">
-                                <i class="fa-solid fa-right-to-bracket me-1"></i>Đăng nhập
-                            </a>
-                        </li>
-                    @endauth
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    {{-- MAIN --}}
-    <main class="container my-4">
 
-        {{-- Flash messages --}}
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                <i class="fa-regular fa-circle-check me-1"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <i class="fa-regular fa-circle-xmark me-1"></i>
-                {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-            </div>
-        @endif
-        @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                <strong>Có lỗi!</strong>
-                <ul class="mb-0 mt-2 ps-3">
-                    @foreach ($errors->all() as $e)
-                        <li>{{ $e }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
-            </div>
-        @endif
+  {{-- FLASH + CONTENT --}}
+  <main class="container">
+    @if (session('success'))
+      <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle me-1"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+      </div>
+    @endif
+    @if (session('error'))
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-x-circle me-1"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+      </div>
+    @endif
+    @if ($errors->any())
+      <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <strong>Có lỗi!</strong>
+        <ul class="mb-0 mt-2 ps-3">
+          @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Đóng"></button>
+      </div>
+    @endif
 
-        @yield('content')
-    </main>
+    {{ $slot ?? '' }}
+    @yield('content')
+  </main>
 
-    {{-- FOOTER --}}
-    <footer class="bg-white border-top py-4">
-        <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
-            <div class="small text-muted">© {{ now()->year }} PhoneShop. All rights reserved.</div>
-            <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('cart.index') }}" class="btn btn-outline-success btn-sm d-md-none">
-                    <i class="fa-solid fa-cart-shopping me-1"></i>Giỏ
-                </a>
-                @guest
-                    <a href="{{ route('login') }}" class="btn btn-outline-primary btn-sm d-md-none">
-                        <i class="fa-solid fa-right-to-bracket me-1"></i>Đăng nhập
-                    </a>
-                @endguest
-            </div>
-        </div>
-    </footer>
+  {{-- FOOTER (dark) --}}
+  @include('partials.footer', [
+    'dark' => true,
+    'brandSvg' => asset('images/logo-mark-white.svg')
+  ])
 
-    {{-- Scripts --}}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  {{-- JS --}}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    @push('styles')
-        <style>
-            /* Nav link hover & active subtle */
-            .navbar .nav-link {
-                border-radius: .5rem;
-            }
+  {{-- Navbar: đổi nền khi cuộn --}}
+  <script>
+    document.addEventListener('scroll', function () {
+      const nav = document.querySelector('.navbar');
+      if(!nav) return;
+      nav.classList.toggle('scrolled', window.scrollY > 20);
+    });
+  </script>
 
-            .navbar .nav-link:hover {
-                background-color: rgba(255, 255, 255, .1);
-            }
+  {{-- Search inline behavior --}}
+  <script>
+    (function () {
+      const btn   = document.getElementById('btnSearch');
+      const box   = document.getElementById('navSearchBox');
+      const input = document.getElementById('navSearchInput');
 
-            .dropdown-menu {
-                border-radius: .75rem;
-                overflow: hidden;
-            }
+      if (!btn || !box) return;
 
-            /* Input group tone dark border */
-            .input-group .form-control:focus {
-                box-shadow: none;
-                border-color: #86b7fe;
-            }
-        </style>
-    @endpush
+      // Toggle mở/đóng khi bấm nút
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        box.classList.toggle('show');
+        if (box.classList.contains('show')) setTimeout(() => input && input.focus(), 60);
+      });
 
-    @stack('scripts')
+      // Click ra ngoài thì đóng
+      document.addEventListener('click', function (e) {
+        if (box.classList.contains('show') && !box.contains(e.target) && e.target !== btn) {
+          box.classList.remove('show');
+        }
+      });
+
+      // Esc để đóng
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') box.classList.remove('show');
+      });
+    })();
+  </script>
+
+  @stack('scripts')
 </body>
-
 </html>
