@@ -4,17 +4,18 @@
   $mp4      = $mp4      ?? asset('videos/hero.mp4');            // public/videos/hero.mp4
   $webm     = $webm     ?? null;                                // ví dụ: asset('videos/hero.webm')
   $poster   = $poster   ?? asset('images/hero-poster.jpg');     // tuỳ chọn
-  $height   = $height   ?? 'clamp(260px, 40vw, 560px)';         // chiều cao responsive
+  $height   = $height   ?? 'clamp(260px, 40vw, 560px)';         // chiều cao responsive (mặc định)
   $controls = $controls ?? false;                               // true = hiện controls (tắt autoplay)
   $caption  = $caption  ?? null;                                // tiêu đề overlay
   $sub      = $sub      ?? null;                                // phụ đề overlay
   $full     = $full     ?? true;                                // true = full ngang màn hình
-  $navH     = $navH     ?? '72px';                              // chiều cao navbar để trừ
+  $navH     = $navH     ?? 'var(--nav-h, 76px)';                // chiều cao navbar để trừ
+
   $wrapperClasses = 'hero-video-wrapper position-relative overflow-hidden shadow-sm ';
   $wrapperClasses .= $full ? 'full-bleed overlap-navbar rounded-0 mb-4' : 'rounded-3 mb-4';
 @endphp
 
-<div class="{{ $wrapperClasses }}" style="--hero-h: {{ $height }}; --nav-h: {{ $navH }};">
+<div class="{{ $wrapperClasses }} hero-banner" style="--hero-h: {{ $height }}; --nav-h: {{ $navH }};">
   <video
     class="hero-video"
     @if($poster) poster="{{ $poster }}" @endif
@@ -41,44 +42,49 @@
   @endif
 </div>
 
-@once('hero-video-styles')
-@push('styles')
-<style>
-  /* Ngăn scroll ngang khi dùng full-bleed */
-  body { overflow-x: hidden; }
+@once
+  @push('styles')
+    <style>
+      /* Ngăn scroll ngang khi dùng full-bleed */
+      body { overflow-x: hidden; }
 
-  /* Full-bleed: bung ra 2 mép dù nằm trong .container */
-  .full-bleed{
-    width: 100vw;
-    max-width: 100vw;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-  }
+      /* Full-bleed: bung ra 2 mép dù nằm trong .container */
+      .full-bleed{
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+      }
 
-  /* Để navbar fixed-top đè lên phần trên của hero (nếu cần) */
-  .overlap-navbar{ margin-top: calc(-1 * var(--nav-h, 72px)); }
+      /* Để navbar fixed-top đè lên phần trên của hero */
+      .overlap-navbar{ margin-top: calc(-1 * var(--nav-h, 76px)); }
 
-  /* Video thật sự full ngang + cao theo biến --hero-h */
-  .hero-video{
-    display: block;
-    width: 100vw;                 /* full ngang */
-    height: var(--hero-h, clamp(260px, 40vw, 560px));
-    object-fit: cover;            /* crop cho đẹp */
-  }
+      /* Video bám theo wrapper để không lệch khi xuất hiện scrollbar */
+      .hero-video{
+        display: block;
+        width: 100%; /* KHÔNG dùng 100vw để tránh lệch 1-2px */
+        height: var(--hero-h, clamp(260px, 40vw, 560px));
+        object-fit: cover; /* crop cho đẹp */
+      }
 
-  /* Overlay tối nhẹ phía trên (tuỳ thích) */
-  .hero-video-wrapper::before{
-    content: "";
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 80px;
-    background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
-    pointer-events: none;
-  }
+      /* (Tuỳ chọn) cao cố định cho desktop: 1 khuôn duy nhất */
+      @media (min-width: 992px){
+        .hero-video{ height: 420px; } /* chỉnh 380/420/460 tuỳ bạn */
+      }
 
-  /* Ẩn vài control mặc định (tuỳ ý) */
-  .hero-video::-webkit-media-controls-download-button { display: none; }
-  .hero-video::-webkit-media-controls-fullscreen-button { display: none; }
-</style>
-@endpush
+      /* Lớp tối nhẹ phía trên để chữ navbar đọc rõ hơn (có thể bỏ) */
+      .hero-video-wrapper::before{
+        content: "";
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 80px;
+        background: linear-gradient(to bottom, rgba(0,0,0,.55), rgba(0,0,0,0));
+        pointer-events: none;
+      }
+
+      /* Ẩn vài control mặc định (khi controls = true) */
+      .hero-video::-webkit-media-controls-download-button { display: none; }
+      .hero-video::-webkit-media-controls-fullscreen-button { display: none; }
+    </style>
+  @endpush
 @endonce

@@ -4,33 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
-// app/Http/Controllers/CartController.php
 class CartController extends Controller
 {
-    protected function cart()
-    {
+    protected function cart(): array {
         return session()->get('cart', []);
     }
-
-    protected function save($cart)
-    {
-        session(['cart' => $cart]);
+    protected function save(array $cart): void {
+        session(['cart' => $cart, 'cart_count' => array_sum($cart)]);
     }
 
-    public function index()
+    public function index(): View
     {
-        $cart = $this->cart();
+        $cart  = $this->cart();
         $items = [];
         $total = 0;
+
         foreach ($cart as $pid => $qty) {
             $p = Product::find($pid);
-            if (! $p) {
-                continue;
-            }
+            if (! $p) continue;
+
             $qty = min($qty, $p->stock);
             $items[] = ['product' => $p, 'qty' => $qty, 'line' => $p->price * $qty];
-            $total += $p->price * $qty;
+            $total  += $p->price * $qty;
         }
 
         return view('shop.cart', compact('items', 'total'));
@@ -50,13 +47,13 @@ class CartController extends Controller
     {
         $qty = (int) $req->input('qty', 1);
         $cart = $this->cart();
+
         if ($qty <= 0) {
             unset($cart[$product->id]);
         } else {
             $cart[$product->id] = min($qty, $product->stock);
         }
         $this->save($cart);
-
         return back();
     }
 
@@ -65,7 +62,6 @@ class CartController extends Controller
         $cart = $this->cart();
         unset($cart[$product->id]);
         $this->save($cart);
-
         return back();
     }
 }

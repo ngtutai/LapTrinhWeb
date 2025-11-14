@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Admin Dashboard')
+@section('title', 'Quản lý')
 
 @section('content')
     {{-- Header --}}
     <div class="d-flex align-items-center justify-content-between mb-4">
         <h4 class="mb-0 fw-semibold">
-            <i class="fa-solid fa-gauge-high me-2"></i>Dashboard
+            <i class="fa-solid fa-gauge-high me-2"></i>Quản lý
         </h4>
         <a href="{{ route('home') }}" class="btn btn-outline-secondary btn-sm">
             <i class="fa-solid fa-arrow-left-long me-1"></i> Về cửa hàng

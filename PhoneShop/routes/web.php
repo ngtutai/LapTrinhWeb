@@ -10,32 +10,33 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 
+// Storefront
 Route::get('/', [ProductController::class, 'index'])->name('home');
 Route::get('/category/{slug}', [ProductController::class, 'byCategory'])->name('category.show');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+Route::get('/search/suggest', [ProductController::class, 'suggest'])->name('search.suggest');
 
 // Cart
-Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('cart.add');
-Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+Route::post('/cart/add/{product}',   [CartController::class, 'add'])->name('cart.add');
+Route::get('/cart',                  [CartController::class, 'index'])->name('cart.index');
 Route::patch('/cart/update/{product}', [CartController::class, 'update'])->name('cart.update');
 Route::delete('/cart/remove/{product}', [CartController::class, 'remove'])->name('cart.remove');
 
-// Checkout
+// Checkout (auth)
 Route::middleware('auth')->group(function () {
-    Route::get('/checkout', [CheckoutController::class, 'create'])->name('checkout.create');
+    Route::get('/checkout',  [CheckoutController::class, 'create'])->name('checkout.create');
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::get('/orders', [CheckoutController::class, 'orders'])->name('orders.mine');
+    Route::get('/orders',    [CheckoutController::class, 'orders'])->name('orders.mine');
 });
 
-// Admin area
+// Admin
 Route::middleware(['auth', 'admin'])
-        ->prefix('admin')
-        ->name('admin.')
-        ->group(function () {
-            Route::view('/', 'admin.dashboard')->name('dashboard'); // /admin
-            Route::resource('categories', AdminCategoryController::class);
-            Route::resource('products', AdminProductController::class);
-            Route::resource('orders', AdminOrderController::class)->only(['index', 'show', 'update']);
-        });
+    ->prefix('admin')->name('admin.')
+    ->group(function () {
+        Route::view('/', 'admin.dashboard')->name('dashboard');
+        Route::resource('categories', AdminCategoryController::class);
+        Route::resource('products',   AdminProductController::class);
+        Route::resource('orders',     AdminOrderController::class)->only(['index', 'show', 'update']);
+    });
 
 require __DIR__.'/auth.php';

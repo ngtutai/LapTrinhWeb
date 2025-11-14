@@ -2,7 +2,7 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    {{-- Lỗi tổng hợp (giữ nguyên cơ chế Breeze) --}}
+    
     @if ($errors->any())
         <div class="mb-4 rounded-md bg-red-50 p-3 text-sm text-red-700">
             <ul class="list-disc list-inside">
